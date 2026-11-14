@@ -1,0 +1,105 @@
+{
+  "lab_name": "Anadolu Tıp Laboratuvarı",
+  "country": "Turkey",
+  "city": "Istanbul",
+  "report_date": "2025-04-18",
+  "source_language": "Turkish",
+  "results": [
+    {
+      "name_en": "Hemoglobin",
+      "original_name": "Hemoglobin",
+      "value": 14.1,
+      "value_text": "14,1",
+      "unit": "g/dL",
+      "range_low": 12.0,
+      "range_high": 16.0,
+      "range_text": "12 – 16",
+      "flag": "normal",
+      "explanation_en": "Hemoglobin is a protein in red blood cells that carries oxygen throughout the body."
+    },
+    {
+      "name_en": "White Blood Cells",
+      "original_name": "Lökosit",
+      "value": 7.0,
+      "value_text": "7,0",
+      "unit": "10^3/µL",
+      "range_low": 4.0,
+      "range_high": 10.0,
+      "range_text": "4 – 10",
+      "flag": "normal",
+      "explanation_en": "White blood cells are cells of the immune system involved in defending the body against infection."
+    },
+    {
+      "name_en": "Fasting Glucose",
+      "original_name": "Açlık Kan Şekeri",
+      "value": 92.0,
+      "value_text": "92",
+      "unit": "mg/dL",
+      "range_low": 70.0,
+      "range_high": 100.0,
+      "range_text": "70 – 100",
+      "flag": "normal",
+      "explanation_en": "Fasting glucose measures sugar levels in the blood after an overnight fast."
+    },
+    {
+      "name_en": "HbA1c",
+      "original_name": "HbA1c",
+      "value": 5.6,
+      "value_text": "5,6",
+      "unit": "%",
+      "range_low": 4.0,
+      "range_high": 5.7,
+      "range_text": "4,0 – 5,7",
+      "flag": "normal",
+      "explanation_en": "HbA1c measures average blood sugar levels over the past two to three months."
+    },
+    {
+      "name_en": "Creatinine",
+      "original_name": "Kreatinin",
+      "value": 0.8,
+      "value_text": "0,8",
+      "unit": "mg/dL",
+      "range_low": 0.6,
+      "range_high": 1.1,
+      "range_text": "0,6 – 1,1",
+      "flag": "normal",
+      "explanation_en": "Creatinine is a waste product filtered by the kidneys, used to assess kidney function."
+    },
+    {
+      "name_en": "TSH",
+      "original_name": "TSH",
+      "value": 1.9,
+      "value_text": "1,9",
+      "unit": "µIU/mL",
+      "range_low": 0.4,
+      "range_high": 4.0,
+      "range_text": "0,4 – 4,0",
+      "flag": "normal",
+      "explanation_en": "TSH measures thyroid-stimulating hormone to evaluate thyroid gland function."
+    },
+    {
+      "name_en": "Vitamin D",
+      "original_name": "Vitamin D (25-OH)",
+      "value": 22.0,
+      "value_text": "22",
+      "unit": "ng/mL",
+      "range_low": 20.0,
+      "range_high": 100.0,
+      "range_text": "20 – 100",
+      "flag": "normal",
+      "explanation_en": "Vitamin D measures total 25-hydroxyvitamin D levels to evaluate bone health and immune function."
+    },
+    {
+      "name_en": "Ferritin",
+      "original_name": "Ferritin",
+      "value": 60.0,
+      "value_text": "60",
+      "unit": "ng/mL",
+      "range_low": 13.0,
+      "range_high": 150.0,
+      "range_text": "13 – 150",
+      "flag": "normal",
+      "explanation_en": "Ferritin measures the amount of iron stored in the body."
+    }
+  ]
+}
