@@ -7,8 +7,6 @@ from app import db
 from app.gemini import ask_json
 
 LANGS = {"de": "German", "bn": "Bangla (Bengali script)", "tr": "Turkish"}
-_translations: dict[tuple[int, str], list[str]] = {}
-_briefs: dict[int, dict] = {}
 
 
 class Brief(BaseModel):
@@ -21,20 +19,25 @@ def translate_explanations(rid: int, results: list[dict], lang: str) -> list[str
     src = [r["explanation_en"] for r in results]
     if lang not in LANGS or not src:
         return src
-    key = (rid, lang)
-    if key not in _translations:
-        out = ask_json(
+    key = f"tr:{rid}:{lang}"
+    cached = db.cache_get(key)
+    if cached:
+        return json.loads(cached)
+    out = ask_json(
             [f"Translate each sentence into plain, simple {LANGS[lang]}. Return a JSON array of strings "
              f"in the same order and of the same length ({len(src)}).\n{json.dumps(src, ensure_ascii=False)}"],
             list[str],
         )
-        _translations[key] = out if len(out) == len(src) else src
-    return _translations[key]
+    if len(out) != len(src):
+        return src  # malformed answer: show English, don't cache
+    db.cache_set(key, json.dumps(out, ensure_ascii=False))
+    return out
 
 
 def doctor_brief(uid: str, rid: int) -> dict:
-    if rid in _briefs:
-        return _briefs[rid]
+    cached = db.cache_get(f"brief:{rid}")
+    if cached:
+        return json.loads(cached)
     report = db.get_report(uid, rid)
     abnormal = [r for r in db.get_results(uid, rid) if r["flag"] in ("low", "high")]
     facts = [{k: r[k] for k in ("name_en", "original_name", "value_text", "unit", "range_text", "flag")} for r in abnormal]
@@ -51,5 +54,6 @@ def doctor_brief(uid: str, rid: int) -> dict:
              f"Abnormal values: {json.dumps(facts, ensure_ascii=False)}"],
             Brief,
         )
-    _briefs[rid] = brief
+    db.cache_set(f"brief:{rid}", json.dumps(brief, ensure_ascii=False))
     return brief
+

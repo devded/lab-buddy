@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS results (
   range_low REAL, range_high REAL, range_text TEXT,
   flag TEXT, explanation_en TEXT
 );
+CREATE TABLE IF NOT EXISTS cache (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS access_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
@@ -184,6 +188,17 @@ def compare_tests(uid: str) -> list[str]:
         (uid,),
     )
     return [f["name"] for f in found]
+
+
+def cache_get(key: str) -> str | None:
+    """Persistent cache for Gemini output (translations, briefs) so restarts don't burn API quota."""
+    r = rows("SELECT value FROM cache WHERE key = ?", (key,))
+    return r[0]["value"] if r else None
+
+
+def cache_set(key: str, value: str) -> None:
+    with conn() as c:
+        c.execute("INSERT OR REPLACE INTO cache (key, value) VALUES (?, ?)", (key, value))
 
 
 def log(uid: str, actor: str, action: str, scope: str) -> None:
