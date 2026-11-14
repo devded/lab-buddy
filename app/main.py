@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from app import db
 from app.brief import doctor_brief, translate_explanations
 from app.extractor import extract
+from app.doctors import find_nearby, geocode, specialties_for
 
 log = logging.getLogger("labbuddy")
 app = FastAPI(title="Lab Buddy")
@@ -79,15 +80,18 @@ def detail(uid: str, rid: int, lang: str = "en") -> dict:
     if not report:
         raise HTTPException(404, "Report not found.")
     results = db.get_results(uid, rid)
+    english = [r["explanation_en"] for r in results]
     try:
         texts = translate_explanations(rid, results, lang)
     except Exception:
         log.exception("translation failed")
-        texts = [r["explanation_en"] for r in results]  # fall back to English, never fail the page
+        texts = english  # fall back to English, never fail the page
     for r, t in zip(results, texts):
         r["explanation"] = t
     results.sort(key=lambda r: db.FLAG_ORDER.get(r["flag"], 1))
-    return {"report": report, "results": results}
+    # Tell the client which language it actually got, so the UI can say "showing English" instead of lying.
+    served = lang if lang == "en" or texts != english else "en"
+    return {"report": report, "results": results, "lang": served}
 
 
 def save_extracted(uid: str, filename: str, extracted: dict, action: str) -> dict:
@@ -155,6 +159,40 @@ def brief(rid: int, uid: str = Depends(current_user)):
         raise HTTPException(502, "Couldn't write the doctor brief right now. Please retry.")
     db.log(uid, "web", "get_doctor_brief", f"report {rid}")
     return b
+
+
+@api.get("/reports/{rid}/doctors")
+def doctors(rid: int, lat: float | None = None, lon: float | None = None, uid: str = Depends(current_user)):
+    """Specialties that fit this report's abnormal values (+ real doctors nearby when lat/lon given)."""
+    if not db.get_report(uid, rid):
+        raise HTTPException(404, "Report not found.")
+    specs = specialties_for([r for r in db.get_results(uid, rid) if r["flag"] in ("low", "high")])
+    if lat is None or lon is None:
+        return {"specialties": specs, "doctors": []}
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise HTTPException(422, "Invalid location.")
+    try:
+        found = find_nearby(lat, lon, [s["key"] for s in specs])
+    except Exception:
+        log.exception("doctor search failed")
+        raise HTTPException(502, "Doctor search is busy right now. Please retry in a moment.")
+    db.log(uid, "web", "find_doctors", f"report {rid}: {len(found)} practices nearby")  # no coordinates logged
+    return {"specialties": specs, "doctors": found}
+
+
+@api.get("/geocode")
+def geocode_place(postcode: str = "", city: str = "", uid: str = Depends(current_user)):
+    postcode, city = postcode.strip()[:20], city.strip()[:100]
+    if not (postcode or city):
+        raise HTTPException(422, "Enter a postcode or a city.")
+    try:
+        hit = geocode(postcode, city)
+    except Exception:
+        log.exception("geocode failed")
+        raise HTTPException(502, "Location search is busy right now. Please retry.")
+    if not hit:
+        raise HTTPException(404, "Couldn't find that postcode/city. Check the spelling, e.g. 10115 + Berlin.")
+    return hit
 
 
 @api.get("/compare/tests")

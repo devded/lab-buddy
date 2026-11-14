@@ -31,9 +31,31 @@ Username + password (scrypt-hashed, stored in SQLite), bearer token per session.
 `/api/auth/register|login|logout` needs `Authorization: Bearer <token>`; all data is scoped per user.
 A demo account `demo` / `demo` is created on startup. The MCP server acts for `LABBUDDY_USER` (default `demo`).
 
+History for the charts: `.venv/bin/python seed.py --reset` adds 7 synthetic reports (Dhaka 2021 → Berlin 2025)
+for `demo`; then load both samples in the app for a 9-report history ("Trends at a glance" + Compare chart).
+
 Reset the demo: stop the backend, `rm labbuddy.db`, start it again.
 Sample PDFs live in `samples/` (`make_samples.py` regenerates them). The first "Try a sample report"
 caches the extraction as `samples/*.json`, so later sample loads work without Gemini.
+
+## Gemini quota
+
+Free-tier keys have small per-model limits (e.g. 20 requests/day). `GEMINI_FALLBACK_MODELS` in `.env` lists models
+to switch to on 429/503. Translations and doctor briefs are cached in SQLite (`cache` table), so each is generated
+once per report + language, even across restarts. If translation still fails, the app says "showing English".
+
+## PDF export
+
+Results tab → pick a language → **Export PDF** → browser print dialog → "Save as PDF". The printout (A4) has the
+report details, all results with this report's ranges and status, explanations in the chosen language, and the German
+doctor note. The PDF language picker and the header language picker are the same setting.
+
+## Doctors near you
+
+Abnormal tests → which doctor (`app/doctors.py`: GP always, plus e.g. Diabetology for HbA1c/glucose, Endocrinology
+for TSH, Nephrology for creatinine). Search by postcode/address (or "Use my location" on https/localhost) returns real
+practices from OpenStreetMap (Overpass, falling back to Nominatim) with distance, hours, phone and directions.
+Coordinates are forwarded to OSM for the search only; nothing about location is stored or logged.
 
 ## MCP (Claude Desktop)
 

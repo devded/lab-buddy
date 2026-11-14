@@ -30,6 +30,7 @@ export interface Result {
 export interface ReportDetail {
   report: Report
   results: Result[]
+  lang: Lang // language the explanations are actually in (falls back to "en" if translation failed)
 }
 
 export interface Brief {
@@ -69,4 +70,38 @@ export interface User {
 export interface AuthResponse {
   token: string
   username: string
+}
+
+export interface DoctorSpecialty {
+  key: string
+  label_en: string
+  label_de: string
+  tests: string[]
+}
+
+export interface Doctor {
+  id: string
+  name: string
+  speciality: string
+  specialty_key: string
+  address: string
+  phone: string | null
+  website: string | null
+  opening_hours: string | null
+  wheelchair: string | null
+  languages: string[]
+  lat: number
+  lon: number
+  distance_m: number
+}
+
+export interface DoctorSearch {
+  specialties: DoctorSpecialty[]
+  doctors: Doctor[]
+}
+
+export interface Place {
+  lat: number
+  lon: number
+  label: string
 }

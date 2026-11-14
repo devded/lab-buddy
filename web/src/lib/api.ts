@@ -1,4 +1,4 @@
-import type { AuthResponse, Brief, CompareRow, History, Lang, LogEntry, Report, ReportDetail, User } from "@/types"
+import type { AuthResponse, Brief, CompareRow, DoctorSearch, History, Lang, LogEntry, Report, Place, ReportDetail, User } from "@/types"
 
 const TOKEN_KEY = "labbuddy.token"
 
@@ -81,6 +81,10 @@ export const api = {
   compare: (test: string) => request<CompareRow[]>(`/compare?test=${encodeURIComponent(test)}`),
   accessLog: () => request<LogEntry[]>("/access-log"),
   history: () => request<History>("/history"),
+  doctors: (id: number, at?: { lat: number; lon: number }) =>
+    request<DoctorSearch>(`/reports/${id}/doctors${at ? `?lat=${at.lat}&lon=${at.lon}` : ""}`),
+  geocode: (postcode: string, city: string) =>
+    request<Place>(`/geocode?${new URLSearchParams({ postcode, city })}`),
 }
 
 const LANG_CODES: Record<string, string> = {

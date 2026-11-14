@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertCircle, ShieldCheck, Stethoscope, TriangleAlert } from "lucide-react"
+import { AlertCircle, FlaskConical, MapPin, ShieldCheck, Stethoscope, TriangleAlert } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ExportPdf } from "@/components/ExportPdf"
 import { AccessLog, AccessLogTitle, useAccessLog } from "@/components/AccessLog"
 import { CompareView } from "@/components/CompareView"
 import { DoctorBrief } from "@/components/DoctorBrief"
 import { EmptyState } from "@/components/EmptyState"
 import { HistoryGrid } from "@/components/HistoryGrid"
+import { NearbyDoctors } from "@/components/NearbyDoctors"
 import { Header } from "@/components/Header"
 import { ReportTabs } from "@/components/ReportTabs"
 import { ResultCard } from "@/components/ResultCard"
@@ -57,10 +60,12 @@ function LabBuddy({ username, onSignOut }: { username: string; onSignOut: () => 
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<ReportDetail | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
   const [compareTests, setCompareTests] = useState<string[]>([])
   const [compareKey, setCompareKey] = useState(0)
   const [compareTest, setCompareTest] = useState<string | null>(null)
   const [history, setHistory] = useState<History | null>(null)
+  const [view, setView] = useState<"results" | "doctors">("results")
   const compareRef = useRef<HTMLDivElement>(null)
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
@@ -112,7 +117,7 @@ function LabBuddy({ username, onSignOut }: { username: string; onSignOut: () => 
     return () => {
       cancelled = true
     }
-  }, [selectedId, lang])
+  }, [selectedId, lang, retryKey])
 
   const addReport = async (run: () => Promise<ReportDetail>) => {
     lastAdd.current = run
@@ -139,7 +144,7 @@ function LabBuddy({ username, onSignOut }: { username: string; onSignOut: () => 
     : []
 
   return (
-    <div className="min-h-dvh overflow-x-hidden">
+    <div className="min-h-dvh overflow-x-hidden print:hidden">
       <Header lang={lang} onLangChange={setLang} username={username} onSignOut={onSignOut} />
 
       <main className="mx-auto max-w-[1200px] px-4 pt-4 pb-32 lg:pb-10">
@@ -174,9 +179,42 @@ function LabBuddy({ username, onSignOut }: { username: string; onSignOut: () => 
               <>
                 <ReportTabs reports={reports} selectedId={selectedId} onSelect={setSelectedId} />
 
+                <Tabs value={view} onValueChange={(v) => setView(v as "results" | "doctors")}>
+                  <TabsList className="grid w-full grid-cols-2 rounded-xl bg-slate-200/60 group-data-horizontal/tabs:h-12 md:inline-grid md:w-auto">
+                    <TabsTrigger value="results" className="rounded-lg px-4 text-base">
+                      <FlaskConical /> Results
+                    </TabsTrigger>
+                    <TabsTrigger value="doctors" className="rounded-lg px-4 text-base">
+                      <MapPin /> Doctors near you
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {/* Doctors tab stays mounted (hidden) so a search survives switching tabs. */}
+                <div className={view === "doctors" ? "" : "hidden"}>
+                  {showingDetail ? (
+                    <NearbyDoctors reportId={showingDetail.report.id} defaultCity={showingDetail.report.city ?? ""} />
+                  ) : (
+                    <Skeleton className="h-64 rounded-2xl" />
+                  )}
+                </div>
+
+                <div className={view === "results" ? "space-y-4" : "hidden"}>
                 {showingDetail ? (
                   <>
                     <SummaryBar results={results} onBrief={() => setBriefOpen(true)} />
+                    {showingDetail.lang !== lang && (
+                      <Alert className="rounded-xl border-amber-300 bg-amber-50 text-amber-900">
+                        <AlertCircle className="text-amber-600" />
+                        <AlertDescription className="flex flex-wrap items-center justify-between gap-2 text-amber-900">
+                          Translation is busy right now, showing explanations in English.
+                          <Button size="sm" variant="outline" className="h-11 md:h-8" onClick={() => setRetryKey((k) => k + 1)}>
+                            Retry
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <ExportPdf reportId={showingDetail.report.id} lang={lang} onLangChange={setLang} />
                     {results.length === 0 ? (
                       <Card className="rounded-2xl p-5 text-center text-muted-foreground">
                         No test results were found in this report.
@@ -215,6 +253,7 @@ function LabBuddy({ username, onSignOut }: { username: string; onSignOut: () => 
                 />
                 <div ref={compareRef} className="scroll-mt-20">
                   <CompareView tests={compareTests} refreshKey={compareKey} test={compareTest} onTestChange={setCompareTest} />
+                </div>
                 </div>
               </>
             )}

@@ -4,7 +4,7 @@
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Inter', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
     --color-ring: var(--ring);
     --color-input: var(--input);
     --color-border: var(--border);
@@ -72,4 +72,17 @@
   * { @apply border-border outline-ring/50; }
   html { @apply font-sans; }
   body { @apply bg-slate-50 text-foreground text-base antialiased; }
+}
+
+/* PDF export (browser "Save as PDF"): A4, keep status colors. */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+@media print {
+  body {
+    background: white;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }
